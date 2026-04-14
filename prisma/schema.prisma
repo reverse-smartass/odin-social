@@ -19,11 +19,13 @@ model User {
   displayName String?
   password    String   @default("placeholder")
   createdAt   DateTime @default(now())
-
+  profilePicture String?
   sentMessages      Message[]  @relation("SentMessages")
   memberOfChatrooms Chatroom[] @relation("ChatroomUsers")
   ownedChatrooms    Chatroom[] @relation("OwnedChatrooms")
-
+  userPosts             Post[]     @relation("UserPosts")
+  userComments          Comment[]  @relation("UserComments")
+  likedPosts            Post[]     @relation("PostLikes")
   // Friend requests sent by this user
   sentRequests     FriendRequest[] @relation("SentRequests")
   // Friend requests received by this user
@@ -70,4 +72,25 @@ enum FriendRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  author    User     @relation("UserPosts", fields: [authorId], references: [id])
+  authorId  String
+  Likes     User[]   @relation("PostLikes")
+  createdAt DateTime @default(now())
+  comments  Comment[] @relation("PostComments")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  author    User     @relation("UserComments", fields: [authorId], references: [id])
+  authorId  String
+  post      Post     @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  createdAt DateTime @default(now())
 }

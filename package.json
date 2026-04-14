@@ -1,8 +1,8 @@
 {
-  "name": "odin-discord-backend",
+  "name": "odin-social",
   "version": "1.0.0",
   "description": "",
-  "main": "test-db.js",
+  "main": "src/main.jsx",
   "directories": {
     "lib": "lib"
   },
@@ -15,16 +15,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/reverse-smartass/odin-discord.git"
+    "url": "git+https://github.com/reverse-smartass/odin-social.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/reverse-smartass/odin-discord-backend/issues"
+    "url": "https://github.com/reverse-smartass/odin-social/issues"
   },
-  "homepage": "https://github.com/reverse-smartass/odin-discord-backend#readme",
+  "homepage": "https://github.com/reverse-smartass/odin-social#readme",
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
@@ -66,3 +66,5 @@
     "vite": "^8.0.4"
   }
 }
+
+
