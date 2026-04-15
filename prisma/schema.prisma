@@ -77,11 +77,12 @@ model Post {
   id        String   @id @default(cuid())
   title     String
   content   String
+  mediaUrl  String?
   author    User     @relation("UserPosts", fields: [authorId], references: [id])
   authorId  String
   Likes     User[]   @relation("PostLikes")
   createdAt DateTime @default(now())
-  replyTo    Post?    @relation("PostComments", fields: [replyToId], references: [id], onDelete: Cascade)
+  replyTo    Post?    @relation("PostReply", fields: [replyToId], references: [id], onDelete: Cascade)
   replyToId  String?
-  replies  Post[] @relation("PostComments")
+  replies  Post[] @relation("PostReply")
 }
