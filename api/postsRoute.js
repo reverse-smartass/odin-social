@@ -287,6 +287,37 @@ async (req, res, next) => {
   }
 });
 
+postRouter.patch("/like-comment/:commentid/", passport.authenticate("jwt", { session: false }),
+async (req, res, next) => {
+  const commentId = req.params.commentid;
 
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.json({
+      errors: errors.array(),
+      previousData: req.body,
+    });
+  }
+
+  const {comment} = req.body;
+
+  try {
+    const savedComment = await prisma.comment.update({
+      where: {
+        id: commentId,
+      },
+      data: {
+        content: comment,
+      }
+    });
+    console.log("Comment saved:", comment);
+    res.status(200).json({
+      message: "comment saved",
+      comment: { savedComment },
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 export default postRouter;

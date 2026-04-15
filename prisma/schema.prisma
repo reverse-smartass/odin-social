@@ -82,7 +82,9 @@ model Post {
   authorId  String
   Likes     User[]   @relation("PostLikes")
   createdAt DateTime @default(now())
-  comments  Comment[] @relation("PostComments")
+  replyTo    Post?    @relation("PostComments", fields: [replyToId], references: [id], onDelete: Cascade)
+  replyToId  String?
+  replies  Post[] @relation("PostComments")
 }
 
 model Comment {
