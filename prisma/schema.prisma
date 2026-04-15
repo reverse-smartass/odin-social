@@ -29,6 +29,9 @@ model User {
   sentRequests     FriendRequest[] @relation("SentRequests")
   // Friend requests received by this user
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+  following  User[] @relation("UserFollows")
+  followedBy User[] @relation("UserFollows")
 }
 
 model Chatroom {

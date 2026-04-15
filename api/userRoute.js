@@ -136,7 +136,7 @@ userRouter.delete(
   "/:userid/delete",
   passport.authenticate("jwt", { session: false }),
   isOwner,
-  async (req, res, next) => {
+  async (req, res) => {
     const userId = req.params.userid;
 
     try {
@@ -175,6 +175,46 @@ userRouter.get("/:userid",  passport.authenticate("jwt", { session: false }), as
   });
 
   res.json(result);
+});
+
+userRouter.patch("/:userid/toggle-follow/", passport.authenticate("jwt", { session: false }),
+async (req, res) => {
+  const followTargetId = req.params.userid;
+  const currentUserId = req.user.id;
+
+  try {
+    // 1. Check if the like already exists
+
+    const targetUser = await prisma.user.findUnique({
+      where: {
+        id: followTargetId,
+      },
+      include: {
+        followedBy: {where: {id: currentUserId}},
+      }
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ error: "Follow target not found" });
+    }
+
+    const existingFollow = targetUser.followedBy.length > 0;
+
+    await prisma.post.update({
+      where: {
+        id: followTargetId,
+      },
+      data: {
+        Likes: {
+          [existingFollow ? "disconnect" : "connect"]: { id: currentUserId }
+        }
+      }
+    });
+
+    return res.json({ followed: !existingFollow });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to toggle follow ${err.message}`  });
+  }
 });
 
 export default userRouter;
