@@ -2,6 +2,7 @@ import { Router } from "express";
 import prisma from "../lib/prisma.ts";
 import { body, validationResult } from "express-validator";
 import passport from "passport";
+import { disconnect } from "node:cluster";
 const postRouter = Router();
 
 const validatePost = [
@@ -287,36 +288,55 @@ async (req, res, next) => {
   }
 });
 
-postRouter.patch("/like-comment/:commentid/", passport.authenticate("jwt", { session: false }),
+postRouter.patch("/toggle-like-comment/:postid/", passport.authenticate("jwt", { session: false }),
 async (req, res, next) => {
-  const commentId = req.params.commentid;
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.json({
-      errors: errors.array(),
-      previousData: req.body,
-    });
-  }
-
-  const {comment} = req.body;
+  const postId = req.params.postid;
+  const userId = req.user.id;
 
   try {
-    const savedComment = await prisma.comment.update({
+    // 1. Check if the like already exists
+    const existingLike = await prisma.post.findUnique({
       where: {
-        id: commentId,
-      },
-      data: {
-        content: comment,
+        likes: {
+          some: {
+            userId: userId,
+            postId: postId,
+          }
+        }
       }
     });
-    console.log("Comment saved:", comment);
-    res.status(200).json({
-      message: "comment saved",
-      comment: { savedComment },
-    });
+
+    if (existingLike) {
+      // 2. If it exists, UNLIKE (delete)
+      await prisma.post.update({
+        where: { 
+          postId: postId,
+        },
+        data: {
+          Likes: {
+            disconnect: {
+              id: userId
+            }
+          }
+        }
+      });
+      return res.json({ liked: false });
+    } else {
+      // 3. If it doesn't exist, LIKE (create)
+      await prisma.post.update({
+        where: {
+          postId: postId,
+        },
+        data: {Likes: {
+          connect: {
+            id: userId
+          }
+        }}
+      });
+      return res.json({ liked: true });
+    }
   } catch (err) {
-    return next(err);
+    res.status(500).json({ error: "Failed to toggle like"  });
   }
 });
 

@@ -47,7 +47,8 @@ signupRouter.post("/", validateSignUp, async (req, res, next) => {
       data: {
         identifier: identifier,
         email: email,
-        password: hashedPassword
+        password: hashedPassword,
+        profilePicture: `https://api.dicebear.com/8.x/identicon/svg?seed=${identifier}`,
       }
     });
     console.log("Created user:", user);
