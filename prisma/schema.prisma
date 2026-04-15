@@ -24,7 +24,6 @@ model User {
   memberOfChatrooms Chatroom[] @relation("ChatroomUsers")
   ownedChatrooms    Chatroom[] @relation("OwnedChatrooms")
   userPosts             Post[]     @relation("UserPosts")
-  userComments          Comment[]  @relation("UserComments")
   likedPosts            Post[]     @relation("PostLikes")
   // Friend requests sent by this user
   sentRequests     FriendRequest[] @relation("SentRequests")
@@ -85,14 +84,4 @@ model Post {
   replyTo    Post?    @relation("PostComments", fields: [replyToId], references: [id], onDelete: Cascade)
   replyToId  String?
   replies  Post[] @relation("PostComments")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  author    User     @relation("UserComments", fields: [authorId], references: [id])
-  authorId  String
-  post      Post     @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
-  postId    String
-  createdAt DateTime @default(now())
 }
