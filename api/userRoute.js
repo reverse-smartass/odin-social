@@ -172,6 +172,24 @@ userRouter.get("/:userid",  passport.authenticate("jwt", { session: false }), as
     where: {
       id: userId,
     },
+    include: {
+      following: {
+        select: {
+          id: true,
+          displayName: true,
+          identifier: true,
+          profilePicture: true,
+        },
+      },
+      followedBy: {
+        select: {
+          id: true,
+          displayName: true,
+          identifier: true,
+          profilePicture: true,
+        },
+      },
+    },
   });
 
   res.json(result);
@@ -182,8 +200,11 @@ async (req, res) => {
   const followTargetId = req.params.userid;
   const currentUserId = req.user.id;
 
+  if (followTargetId === currentUserId) {
+    return res.status(400).json({ error: "Cannot follow yourself." });
+  }
+
   try {
-    // 1. Check if the like already exists
 
     const targetUser = await prisma.user.findUnique({
       where: {
@@ -200,12 +221,12 @@ async (req, res) => {
 
     const existingFollow = targetUser.followedBy.length > 0;
 
-    await prisma.post.update({
+    await prisma.user.update({
       where: {
         id: followTargetId,
       },
       data: {
-        Likes: {
+        followedBy: {
           [existingFollow ? "disconnect" : "connect"]: { id: currentUserId }
         }
       }
@@ -216,5 +237,5 @@ async (req, res) => {
     res.status(500).json({ error: `Failed to toggle follow ${err.message}`  });
   }
 });
-
+         
 export default userRouter;

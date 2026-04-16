@@ -171,16 +171,51 @@ postRouter.get("/:postid", passport.authenticate("jwt", { session: false }), asy
   res.json(result);
 });
 
-postRouter.get("/:postid/replies", async (req, res) => {
-  const postId = req.params.postid;
+postRouter.get("/:userid", passport.authenticate("jwt", { session: false }), async (req, res) => {
+  const userId = req.params.userid;
 
   const result = await prisma.post.findMany({
     where: {
-      replyToId: postId,
+      authorId: userId,
     },
   });
 
   res.json(result);
+});
+
+   
+postRouter.get("/:postid/replies", async (req, res) => {
+  const postId = req.params.postid;
+
+  try {
+
+    const post = await prisma.post.findUnique({
+      where: {
+        id: postId,
+      }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const result = await prisma.post.findMany({
+      where: {
+        replyToId: postId,
+      },
+      include: {
+          author: { select: { id: true, displayName: true, identifier: true, profilePicture: true } },
+          _count: { select: { Likes: true, replies: true } },
+          Likes: { where: { id: req.user.id }, select: { id: true } }
+      }
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: `Failed to fetch replies ${err.message}`  });
+  }
+
+  
 });
 
 postRouter.patch("/:postid/toggle-like/", passport.authenticate("jwt", { session: false }),
@@ -219,7 +254,47 @@ async (req, res, next) => {
 
     return res.json({ liked: !existingLike });
   } catch (err) {
-    res.status(500).json({ error: "Failed to toggle like"  });
+    res.status(500).json({ error: `Failed to toggle like ${err.message}`  });
+  }
+});
+
+postRouter.get("/feed", passport.authenticate("jwt", { session: false }),
+async (req, res, next) => {
+  const latestPostTime = req.query.latestPostTime;
+
+  try {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { following: { select: { id: true } } },
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const posts = await prisma.post.findMany({
+      take: 20,
+      where: {
+        authorId:{
+          in: currentUser.following.map(u => u.id).concat(currentUser.id)
+        } ,
+        createdAt: {
+          lt: latestPostTime ? new Date(latestPostTime) : new Date(),
+        }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        author: { select: { id: true, displayName: true, identifier: true, profilePicture: true } },
+        _count: { select: { Likes: true, replies: true } },
+        Likes: { where: { id: req.user.id }, select: { id: true } }
+      }
+    });
+
+    return res.status(200).json({ posts });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to fetch feed ${err.message}`  });
   }
 });
 

@@ -17,6 +17,7 @@ model User {
   email       String   @unique
   identifier  String   @unique
   displayName String?
+  about       String?
   password    String   @default("placeholder")
   createdAt   DateTime @default(now())
   profilePicture String?
@@ -78,7 +79,7 @@ enum FriendRequestStatus {
 
 model Post {
   id        String   @id @default(cuid())
-  title     String
+  title     String?
   content   String
   mediaUrl  String?
   author    User     @relation("UserPosts", fields: [authorId], references: [id])
