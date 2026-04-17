@@ -13,32 +13,29 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  identifier  String   @unique
-  displayName String?
-  about       String?
-  password    String   @default("placeholder")
-  createdAt   DateTime @default(now())
+  id             String   @id @default(uuid())
+  email          String   @unique
+  identifier     String   @unique
+  displayName    String?
+  about          String?
+  password       String   @default("placeholder")
+  createdAt      DateTime @default(now())
   profilePicture String?
-  sentMessages      Message[]  @relation("SentMessages")
-  memberOfChatrooms Chatroom[] @relation("ChatroomUsers")
-  ownedChatrooms    Chatroom[] @relation("OwnedChatrooms")
-  userPosts             Post[]     @relation("UserPosts")
-  likedPosts            Post[]     @relation("PostLikes")
-  // Friend requests sent by this user
-  sentRequests     FriendRequest[] @relation("SentRequests")
-  // Friend requests received by this user
-  receivedRequests FriendRequest[] @relation("ReceivedRequests")
 
-  following  User[] @relation("UserFollows")
-  followedBy User[] @relation("UserFollows")
+  sentMessages      Message[]       @relation("SentMessages")
+  memberOfChatrooms Chatroom[]      @relation("ChatroomUsers")
+  ownedChatrooms    Chatroom[]      @relation("OwnedChatrooms")
+  userPosts         Post[]          @relation("UserPosts")
+  likedPosts        Post[]          @relation("PostLikes")
+  sentRequests      FriendRequest[] @relation("SentRequests")
+  receivedRequests  FriendRequest[] @relation("ReceivedRequests")
+  following         User[]          @relation("UserFollows")
+  followedBy        User[]          @relation("UserFollows")
 }
 
 model Chatroom {
   id               String    @id @default(cuid())
   roomName         String?
-  // For DMs: store both user IDs so we can derive display name on the client
   isDirect         Boolean   @default(false)
   users            User[]    @relation("ChatroomUsers")
   owner            User      @relation("OwnedChatrooms", fields: [ownerId], references: [id])
@@ -86,7 +83,7 @@ model Post {
   authorId  String
   Likes     User[]   @relation("PostLikes")
   createdAt DateTime @default(now())
-  replyTo    Post?    @relation("PostReply", fields: [replyToId], references: [id], onDelete: Cascade)
-  replyToId  String?
-  replies  Post[] @relation("PostReply")
+  replyTo   Post?    @relation("PostReply", fields: [replyToId], references: [id], onDelete: Cascade)
+  replyToId String?
+  replies   Post[]   @relation("PostReply")
 }
